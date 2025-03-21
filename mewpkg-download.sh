@@ -1,12 +1,22 @@
 #!/bin/bash
 
 # Vérification si un paquet a été spécifié
-if [ -z "$1" ]; then
-  echo "Usage: $0 <package>"
-  exit 1
+if [ "$#" -ne 2 ] || [ "$1" != "install" ]; then
+    echo "Utilisation : mewpkg install <paquet>"
+    exit 1
+fi
+#!/bin/bash
+
+# Vérifier l'argument
+if [[ "$1" == "update" ]]; then
+    echo "Mise à jour du système avec mewpkg..."
+    sudo pacman -Syu --noconfirm
+    exit 0
 fi
 
-PACKAGE=$1
+# Si l'argument n'est pas "update", continuer avec le reste du script...
+
+PACKAGE=$2
 TMP_DIR="/tmp/mewpkg_temp"
 mkdir -p "$TMP_DIR"
 
