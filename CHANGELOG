@@ -1,0 +1,8 @@
+#Changelog
+
+#Unreleased
+
+-Rendre mewpkg indépendant de pacman
+
+#[1.0.0] - 23 mars 2025
+-Première version de mewpkg
