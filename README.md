@@ -6,3 +6,5 @@ Usage: mewpkg install <package> to install a package
        mewpkg update to update the system
 
 To install mewpkg on your machine: 
+
+`git clone https://github.com/sauce-isse/mewpkg`
