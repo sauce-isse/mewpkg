@@ -1,71 +1,32 @@
 #!/bin/bash
 
-# Vérification si un paquet a été spécifié
-if [ "$#" -ne 2 ] || [ "$1" != "install" ]; then
-    echo "Utilisation : mewpkg install <paquet>"
-    exit 1
-fi
-#!/bin/bash
+ # Définition des variables
+ MIRROR="https://geo.mirror.pkgbuild.com/"
+ TMP_DIR="/tmp/mewpkg_temp"
+ REPOS=("core" "extra" "community" "multilib")
 
-# Vérifier l'argument
-if [[ "$1" == "update" ]]; then
-    echo "Mise à jour du système avec mewpkg..."
-    sudo pacman -Syu --noconfirm
-    exit 0
-fi
+ mkdir -p "$TMP_DIR"
 
-# Si l'argument n'est pas "update", continuer avec le reste du script...
+ # Vérification des arguments
+ if [ "$#" -ne 2 ] || [ "$1" != "install" ]; then
+     echo "Utilisation : mewpkg install <paquet>"
+     exit 1
+ fi
 
-PACKAGE=$2
-TMP_DIR="/tmp/mewpkg_temp"
-mkdir -p "$TMP_DIR"
+ PACKAGE="$2"
 
-# Trouver le premier miroir actif
-MIRROR="https://geo.mirror.pkgbuild.com/"
+ echo "🔍 Recherche de la dernière version de $PACKAGE..."
 
-if [ -z "$MIRROR" ]; then
-  echo "Aucun miroir Arch Linux trouvé. Vérifie /etc/pacman.d/mirrorlist."
-  exit 1
-fi
+ # Recherche de la version et du dépôt où se trouve le paquet
+ LATEST_VERSION=""
+ FOUND_REPO=""
+ PACKAGE_ARCH="x86_64"  # Par défaut, on cherche en x86_64
 
-echo "Utilisation du miroir : $MIRROR"
-# Demander la confirmation de l'utilisateur avant l'installation
-read -p "Voulez-vous vraiment installer $PACKAGE-${LATEST_VERSION} ? (y/n) " -n 1 -r
-echo    # Saut de ligne
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Installation annulée."
-    exit 0
-fi
-
-# Recherche des versions disponibles du paquet
-echo "Recherche des versions disponibles pour le paquet $PACKAGE..."
-
-VERSIONS=$(pacman -Si "$PACKAGE" | grep Version | awk '{print $3}' | sort -V)
-
-if [ -z "$VERSIONS" ]; then
-  echo "Aucune version trouvée pour le paquet $PACKAGE."
-  exit 1
-fi
-
-LATEST_VERSION=$(echo "$VERSIONS" | tail -n 1)
-
-echo "La version la plus récente de $PACKAGE est : $LATEST_VERSION"
-
-# Construire l'URL de téléchargement
-PACKAGE_URL="${MIRROR}/extra/os/x86_64/${PACKAGE}-${LATEST_VERSION}-x86_64.pkg.tar.zst"
-
-echo "Téléchargement de $PACKAGE-${LATEST_VERSION}-x86_64.pkg.tar.zst depuis $PACKAGE_URL..."
-
-wget -O "${TMP_DIR}/${PACKAGE}-${LATEST_VERSION}-x86_64.pkg.tar.zst" "$PACKAGE_URL"
-
-if [ $? -eq 0 ]; then
-  echo "$PACKAGE-${LATEST_VERSION}-x86_64.pkg.tar.zst téléchargé avec succès."
-else
-  echo "Erreur lors du téléchargement de $PACKAGE-${LATEST_VERSION}-x86_64.pkg.tar.zst."
-  exit 1
-fi
-
-sudo pacman -U --noconfirm --needed ${TMP_DIR}/${PACKAGE}-${LATEST_VERSION}-x86_64.pkg.tar.zst
-
-exit 0
-
+ for REPO in "${REPOS[@]}"; do
+     PACKAGE_INFO=$(pacman -Si "$PACKAGE" --dbpath /var/lib/pacman 2>/dev/null)
+     if [ ! -z "$PACKAGE_INFO" ]; then
+         LATEST_VERSION=$(echo "$PACKAGE_INFO" | grep Version | awk '{print $3}')
+         PACKAGE_ARCH=$(echo "$PACKAGE_INFO" | grep Architecture | awk '{print $3}')
+         FOUND_REPO="$REPO"
+         break
+     fi
