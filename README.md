@@ -11,4 +11,4 @@ To install mewpkg on your machine:
 
 `cd mewpkg`
 
-`sudo pacman -U mewpkg.pkg.tar.zst`
+`sudo pacman -U mewpkg.pkg.tar.zst --needed`
